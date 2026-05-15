@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family Meals">
+  <meta name="theme-color" content="#27500A">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Family Meals</title>
+  <style>
+    :root {
+      --green:       #27500A;
+      --green-mid:   #639922;
+      --green-light: #EAF3DE;
+      --teal:        #1D9E75;
+      --teal-light:  #E1F5EE;
+      --blue:        #378ADD;
+      --blue-light:  #E6F1FB;
+      --orange:      #BA7517;
+      --orange-light:#FAEEDA;
+      --red:         #E24B4A;
+      --red-light:   #FCEBEB;
+      --gray-50:     #FAFAF8;
+      --gray-100:    #F4F3EF;
+      --gray-200:    #E8E8E2;
+      --gray-400:    #A8A89E;
+      --gray-600:    #6B6B65;
+      --gray-900:    #1A1A18;
+      --white:       #FFFFFF;
+      --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+      --hdr: 56px; --nav: 72px;
+      --t1: #639922; --t2: #1D9E75; --t3: #378ADD; --t4: #BA7517; --t5: #E24B4A;
+      --t1b:#EAF3DE; --t2b:#E1F5EE; --t3b:#E6F1FB; --t4b:#FAEEDA;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--gray-100);color:var(--gray-900);overflow:hidden;}
+    #app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;}
+
+    /* HEADER */
+    .hdr{height:var(--hdr);background:var(--green);display:flex;align-items:center;padding:0 16px;flex-shrink:0;gap:10px;}
+    .hdr-title{font-size:18px;font-weight:600;color:var(--white);flex:1;}
+    .hdr-sub{font-size:11px;color:rgba(255,255,255,0.6);display:block;}
+    .hdr-btn{width:36px;height:36px;border-radius:18px;background:rgba(255,255,255,0.15);border:none;color:var(--white);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+
+    /* MAIN */
+    .main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav) + 12px);}
+    .page{display:none;} .page.active{display:block;}
+
+    /* TRACKER */
+    .tracker{background:var(--white);margin:12px 12px 0;border-radius:var(--r-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .tracker-hdr{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:8px;}
+    .tracker-title{font-size:13px;font-weight:600;color:var(--gray-900);flex:1;}
+    .tracker-tog{font-size:11px;color:var(--gray-400);}
+    .tracker-body{padding:0 14px 14px;}
+    .tracker-body.collapsed{display:none;}
+    .cal-row{margin-bottom:8px;}
+    .cal-lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+    .cal-name{font-weight:500;color:var(--gray-600);}
+    .cal-val{font-weight:600;}
+    .cal-bar{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;}
+    .cal-fill{height:100%;border-radius:4px;transition:width .3s;}
+    .tier-section{margin-top:10px;border-top:1px solid var(--gray-100);padding-top:10px;}
+    .tier-section-lbl{font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+    .tier-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+    .tier-lbl{font-size:11px;color:var(--gray-600);width:38px;flex-shrink:0;}
+    .tier-track{flex:1;height:8px;background:var(--gray-100);border-radius:4px;overflow:visible;position:relative;}
+    .tier-fill{height:100%;border-radius:4px;transition:width .3s;}
+    .tier-target{position:absolute;top:-3px;height:14px;width:2px;border-radius:1px;opacity:.5;}
+    .tier-pct{font-size:11px;width:42px;text-align:right;flex-shrink:0;}
+
+    /* DAY TABS */
+    .day-tabs-wrap{padding:10px 12px 0;overflow-x:auto;scrollbar-width:none;}
+    .day-tabs-wrap::-webkit-scrollbar{display:none;}
+    .day-tabs{display:flex;gap:5px;background:var(--white);border-radius:var(--r-lg);padding:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .day-tab{flex:1;min-width:42px;padding:7px 3px;border:none;background:transparent;border-radius:var(--r-md);font-size:12px;font-weight:500;color:var(--gray-600);cursor:pointer;text-align:center;transition:all .15s;}
+    .day-tab.active{background:var(--green);color:var(--white);font-weight:700;}
+    .day-tab-lbl{display:block;font-size:11px;}
+    .day-tab-cal{display:block;font-size:9px;margin-top:1px;opacity:.7;}
+
+    /* MEAL CARDS */
+    .meals-wrap{padding:10px 12px;}
+    .day-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+    .day-total-lbl{font-size:13px;font-weight:600;color:var(--gray-600);}
+    .day-total-val{font-size:13px;font-weight:700;color:var(--gray-900);}
+    .meal-card{background:var(--white);border-radius:var(--r-lg);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .meal-hdr{display:flex;align-items:center;padding:11px 14px 9px;cursor:pointer;}
+    .meal-left{flex:1;min-width:0;}
+    .meal-type{font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px;}
+    .meal-name{font-size:15px;font-weight:500;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .meal-cal{font-size:12px;color:var(--gray-600);margin-top:2px;}
+    .meal-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:10px;}
+    .eaten-btn{width:24px;height:24px;border-radius:12px;border:1.5px solid var(--gray-200);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .15s;}
+    .eaten-btn.on{background:var(--teal);border-color:var(--teal);color:var(--white);}
+    .chevron{font-size:16px;color:var(--gray-400);}
+    .tier-stripe{height:4px;margin:0 14px 10px;border-radius:2px;}
+    .meal-empty{padding:22px 14px;text-align:center;cursor:pointer;}
+    .empty-plus{font-size:26px;color:var(--gray-200);display:block;margin-bottom:4px;}
+    .empty-txt{font-size:13px;color:var(--gray-400);}
+
+    /* ACTIONS */
+    .planner-actions{padding:4px 12px 10px;display:flex;gap:8px;}
+    .act-btn{flex:1;padding:11px;border-radius:var(--r-md);border:1.5px solid var(--gray-200);background:var(--white);font-size:13px;font-weight:500;color:var(--gray-900);cursor:pointer;text-align:center;}
+    .act-btn.primary{background:var(--green);border-color:var(--green);color:var(--white);}
+
+    /* PROFILE */
+    .profile-tabs{display:flex;gap:8px;margin:12px 12px 0;}
+    .ptab{flex:1;padding:10px;border-radius:var(--r-md);border:1.5px solid var(--gray-200);background:var(--white);font-size:14px;font-weight:500;color:var(--gray-600);cursor:pointer;text-align:center;transition:all .15s;}
+    .ptab.active{background:var(--green);border-color:var(--green);color:var(--white);}
+    .profile-body{padding:12px;}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+    .stat{background:var(--white);border-radius:var(--r-md);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .stat-lbl{font-size:11px;color:var(--gray-400);margin-bottom:3px;}
+    .stat-val{font-size:21px;font-weight:600;color:var(--gray-900);}
+    .stat-unit{font-size:12px;color:var(--gray-600);}
+    .prog-card{background:var(--white);border-radius:var(--r-md);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--gray-600);margin-bottom:6px;}
+    .prog-bar{height:10px;background:var(--gray-100);border-radius:5px;overflow:hidden;margin-bottom:4px;}
+    .prog-fill{height:100%;border-radius:5px;background:var(--teal);transition:width .4s;}
+    .prog-sub{font-size:11px;color:var(--gray-400);}
+    .note-card{background:var(--green-light);border-radius:var(--r-md);padding:12px;font-size:12px;color:var(--green);line-height:1.5;margin-bottom:10px;}
+    .update-card{background:var(--white);border-radius:var(--r-md);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .update-title{font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+    .update-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .update-lbl{font-size:13px;color:var(--gray-600);flex:1;}
+    .update-input{width:110px;padding:8px 10px;border-radius:var(--r-sm);border:1.5px solid var(--gray-200);font-size:14px;color:var(--gray-900);text-align:right;-webkit-appearance:none;}
+    .update-input:focus{outline:none;border-color:var(--green-mid);}
+    .update-select{width:100%;padding:8px 10px;border-radius:var(--r-sm);border:1.5px solid var(--gray-200);font-size:13px;color:var(--gray-900);background:var(--white);-webkit-appearance:none;margin-top:4px;}
+    .save-btn{width:100%;padding:13px;border-radius:var(--r-md);background:var(--green);border:none;color:var(--white);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;}
+    .saved-msg{font-size:12px;color:var(--teal);text-align:center;margin-top:6px;}
+
+    /* BOTTOM NAV */
+    .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav);background:var(--white);border-top:1px solid var(--gray-200);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10;}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;padding:8px;}
+    .nav-icon{font-size:22px;}
+    .nav-lbl{font-size:11px;font-weight:500;color:var(--gray-400);}
+    .nav-btn.active .nav-lbl{color:var(--green);}
+
+    /* BOTTOM SHEET */
+    .sheet-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:flex-end;justify-content:center;}
+    .sheet-bg.open{display:flex;}
+    .sheet{width:100%;max-width:480px;background:var(--white);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:6px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:88vh;overflow-y:auto;}
+    .sheet-handle{width:36px;height:4px;background:var(--gray-200);border-radius:2px;margin:8px auto 14px;}
+    .sheet-title{font-size:17px;font-weight:600;color:var(--gray-900);margin-bottom:3px;}
+    .sheet-sub{font-size:13px;color:var(--gray-600);margin-bottom:14px;}
+    .sbt{width:100%;padding:14px 16px;border-radius:var(--r-md);border:none;background:var(--gray-100);font-size:15px;font-weight:500;color:var(--gray-900);cursor:pointer;text-align:left;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+    .sbt.danger{color:var(--red);background:var(--red-light);}
+    .sbt.primary{background:var(--green);color:var(--white);}
+    .sbt-icon{font-size:18px;}
+    .sheet-cancel{width:100%;padding:14px;border:none;background:transparent;font-size:15px;color:var(--gray-600);cursor:pointer;margin-top:4px;}
+
+    /* FOOD LOG */
+    .food-input{width:100%;padding:12px;border-radius:var(--r-md);border:1.5px solid var(--gray-200);font-size:15px;color:var(--gray-900);min-height:80px;resize:vertical;font-family:inherit;margin-bottom:8px;}
+    .food-input:focus{outline:none;border-color:var(--green-mid);}
+    .food-hint{font-size:12px;color:var(--gray-400);margin-bottom:12px;line-height:1.5;}
+    .calc-btn{width:100%;padding:12px;border-radius:var(--r-md);background:var(--green);border:none;color:var(--white);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;}
+    .food-results{border-top:1px solid var(--gray-100);padding-top:12px;}
+    .result-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--gray-100);}
+    .result-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .result-name{flex:1;font-size:13px;color:var(--gray-900);}
+    .result-cal{font-size:13px;color:var(--gray-600);}
+    .result-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+    .result-unknown{font-size:12px;color:var(--orange);font-style:italic;}
+    .result-total{display:flex;justify-content:space-between;padding:10px 0;font-weight:700;font-size:15px;}
+    .tier-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+    .tbadge{font-size:11px;padding:3px 8px;border-radius:10px;}
+    .save-food-btn{width:100%;padding:12px;border-radius:var(--r-md);background:var(--green);border:none;color:var(--white);font-size:15px;font-weight:600;cursor:pointer;}
+
+    /* SWAP LIST */
+    .swap-list{max-height:52vh;overflow-y:auto;}
+    .swap-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--r-md);background:var(--gray-50);margin-bottom:6px;cursor:pointer;transition:background .15s;}
+    .swap-item:hover{background:var(--gray-100);}
+    .swap-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .swap-name{flex:1;font-size:14px;font-weight:500;color:var(--gray-900);}
+    .swap-cal{font-size:12px;color:var(--gray-600);}
+
+    /* IMPORT */
+    .import-ta{width:100%;height:150px;padding:12px;border-radius:var(--r-md);border:1.5px solid var(--gray-200);font-size:12px;font-family:monospace;color:var(--gray-900);resize:none;margin-bottom:8px;}
+    .import-ta:focus{outline:none;border-color:var(--green-mid);}
+    .import-hint{font-size:12px;color:var(--gray-400);margin-bottom:12px;line-height:1.5;}
+    .import-btn{width:100%;padding:12px;border-radius:var(--r-md);background:var(--green);border:none;color:var(--white);font-size:15px;font-weight:600;cursor:pointer;}
+    .import-err{font-size:12px;color:var(--red);margin-top:6px;}
+
+    /* CLAUDE LINK */
+    .claude-card{background:var(--green-light);border-radius:var(--r-md);margin:0 12px 10px;padding:14px;}
+    .claude-card-title{font-size:13px;font-weight:600;color:var(--green);margin-bottom:4px;}
+    .claude-card-sub{font-size:12px;color:var(--green);opacity:.8;line-height:1.4;margin-bottom:10px;}
+    .claude-link{display:block;text-align:center;padding:10px;background:var(--green);color:var(--white);border-radius:var(--r-md);font-size:13px;font-weight:600;text-decoration:none;}
+  </style>
+</head>
+<body>
+<div id="app">
+  <header class="hdr">
+    <div style="flex:1">
+      <div class="hdr-title">🥗 Family Meals</div>
+      <span class="hdr-sub" id="week-label">Current week</span>
+    </div>
+    <button class="hdr-btn" onclick="openImport()" title="Import week from Claude">↓</button>
+  </header>
+
+  <div class="main" id="main">
+
+    <!-- PLANNER PAGE -->
+    <div class="page active" id="page-planner">
+      <div class="tracker" id="tracker">
+        <div class="tracker-hdr" onclick="toggleTracker()">
+          <span class="tracker-title">Weekly tracker</span>
+          <span class="tracker-tog" id="tracker-tog">▼</span>
+        </div>
+        <div class="tracker-body" id="tracker-body">
+          <div id="cal-rows"></div>
+          <div class="tier-section">
+            <div class="tier-section-lbl">Food quality — tier distribution</div>
+            <div id="tier-rows"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-tabs-wrap">
+        <div class="day-tabs" id="day-tabs"></div>
+      </div>
+
+      <div class="meals-wrap" id="meals-wrap"></div>
+
+      <div class="claude-card">
+        <div class="claude-card-title">Plan your week with Claude</div>
+        <div class="claude-card-sub">Each weekend, open Claude and describe your week — what's in the fridge, nights out, meals Callie wants to cook. Claude generates the plan and you import it here in one tap.</div>
+        <a class="claude-link" href="https://claude.ai" target="_blank">Open Claude ↗</a>
+      </div>
+
+      <div class="planner-actions">
+        <button class="act-btn primary" onclick="openImport()">⬇ Import week from Claude</button>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+      <div class="profile-tabs">
+        <button class="ptab active" id="ptab-aj" onclick="showPTab('aj')">AJ</button>
+        <button class="ptab" id="ptab-callie" onclick="showPTab('callie')">Callie</button>
+      </div>
+      <div class="profile-body" id="profile-body"></div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-planner" onclick="showPage('planner')">
+      <span class="nav-icon">📅</span><span class="nav-lbl">Planner</span>
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="showPage('profile')">
+      <span class="nav-icon">👤</span><span class="nav-lbl">Profile</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ACTION SHEET -->
+<div class="sheet-bg" id="action-sheet" onclick="bgClose('action-sheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="as-title"></div>
+    <div class="sheet-sub" id="as-sub"></div>
+    <button class="sbt" id="as-eaten" onclick="doEaten()"><span class="sbt-icon" id="as-eaten-icon">✓</span><span id="as-eaten-lbl">Mark as eaten</span></button>
+    <button class="sbt" onclick="openSwap()"><span class="sbt-icon">🔄</span>Swap meal</button>
+    <button class="sbt" onclick="openFoodLog()"><span class="sbt-icon">📝</span>Log what I actually had</button>
+    <button class="sbt danger" id="as-clear" onclick="doClear()"><span class="sbt-icon">🗑</span>Clear slot</button>
+    <button class="sheet-cancel" onclick="bgClose('action-sheet')">Cancel</button>
+  </div>
+</div>
+
+<!-- FOOD LOG SHEET -->
+<div class="sheet-bg" id="food-sheet" onclick="bgClose('food-sheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Log what you ate</div>
+    <textarea class="food-input" id="food-input" placeholder="e.g. 1 cup broccoli, chicken breast, tablespoon olive oil, half avocado, 2 eggs"></textarea>
+    <div class="food-hint">Separate items with commas. Include quantities when you know them. The app recognises ~150 common whole foods from your tier guide.</div>
+    <button class="calc-btn" onclick="calcFood()">Calculate calories + tier</button>
+    <div class="food-results" id="food-results" style="display:none"></div>
+  </div>
+</div>
+
+<!-- SWAP SHEET -->
+<div class="sheet-bg" id="swap-sheet" onclick="bgClose('swap-sheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Swap meal</div>
+    <div class="sheet-sub" id="swap-sub"></div>
+    <div class="swap-list" id="swap-list"></div>
+    <button class="sheet-cancel" onclick="bgClose('swap-sheet')">Cancel</button>
+  </div>
+</div>
+
+<!-- IMPORT SHEET -->
+<div class="sheet-bg" id="import-sheet" onclick="bgClose('import-sheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Import week from Claude</div>
+    <div class="import-hint">Ask Claude to plan your week, copy the JSON output, and paste it below. Your current plan will be replaced.</div>
+    <textarea class="import-ta" id="import-ta" placeholder='{"week":"May 17-23","Sun":{"Breakfast":{"name":"Overnight oats","cal":450,"tier":1},"Snack":{"name":"Walnuts + apple","cal":268,"tier":1},"Lunch":{"name":"Mediterranean salad","cal":520,"tier":1},"Dinner":{"name":"Salmon + lentils","cal":720,"tier":2}},...}'></textarea>
+    <div class="import-err" id="import-err" style="display:none"></div>
+    <button class="import-btn" onclick="doImport()">Import week</button>
+    <button class="sheet-cancel" onclick="bgClose('import-sheet')">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const SLOTS=['Breakfast','Snack','Lunch','Dinner'];
+const TC={1:'#639922',2:'#1D9E75',3:'#378ADD',4:'#BA7517',5:'#E24B4A'};
+const TB={1:'#EAF3DE',2:'#E1F5EE',3:'#E6F1FB',4:'#FAEEDA',5:'#FCEBEB'};
+const TGT={1:55,2:25,3:12,4:5};
+
+// ── FOOD DATABASE ────────────────────────────────────────────────────────────
+// Format: {names:[], portions:[{l:'cup',c:calories}], tier:1-5}
+const FDB=[
+  // T1 Vegetables
+  {n:['broccoli','broccoli florets'],p:[{l:'cup',c:55},{l:'head',c:220},{l:'oz',c:10}],t:1},
+  {n:['spinach','baby spinach'],p:[{l:'cup',c:7},{l:'oz',c:6},{l:'handful',c:7}],t:1},
+  {n:['kale'],p:[{l:'cup',c:33},{l:'bunch',c:100}],t:1},
+  {n:['arugula','rocket'],p:[{l:'cup',c:5}],t:1},
+  {n:['swiss chard','chard'],p:[{l:'cup',c:7}],t:1},
+  {n:['cherry tomatoes','tomatoes','tomato'],p:[{l:'cup',c:27},{l:'piece',c:4},{l:'medium',c:22}],t:1},
+  {n:['cucumber'],p:[{l:'cup',c:16},{l:'whole',c:45},{l:'medium',c:45}],t:1},
+  {n:['bell pepper','pepper','capsicum','red pepper','green pepper'],p:[{l:'medium',c:31},{l:'cup',c:30},{l:'whole',c:31}],t:1},
+  {n:['asparagus'],p:[{l:'cup',c:27},{l:'spear',c:4},{l:'stalk',c:4}],t:1},
+  {n:['zucchini','courgette'],p:[{l:'cup',c:20},{l:'medium',c:33}],t:1},
+  {n:['mushrooms','cremini','portobello','mushroom'],p:[{l:'cup',c:15},{l:'oz',c:6}],t:1},
+  {n:['carrots','carrot'],p:[{l:'cup',c:52},{l:'medium',c:25},{l:'large',c:30}],t:1},
+  {n:['celery'],p:[{l:'cup',c:16},{l:'stalk',c:6},{l:'piece',c:6}],t:1},
+  {n:['garlic'],p:[{l:'clove',c:5},{l:'tbsp',c:13}],t:1},
+  {n:['onion','red onion','yellow onion'],p:[{l:'medium',c:44},{l:'cup',c:64}],t:1},
+  {n:['brussels sprouts','brussel sprouts'],p:[{l:'cup',c:56}],t:1},
+  {n:['cauliflower'],p:[{l:'cup',c:25},{l:'head',c:146}],t:1},
+  {n:['green beans','string beans'],p:[{l:'cup',c:31}],t:1},
+  {n:['cabbage'],p:[{l:'cup',c:22}],t:1},
+  {n:['eggplant','aubergine'],p:[{l:'cup',c:20},{l:'medium',c:130}],t:1},
+  {n:['beets','beetroot','beet'],p:[{l:'cup',c:58},{l:'medium',c:44}],t:1},
+  {n:['romaine','romaine lettuce'],p:[{l:'cup',c:8}],t:1},
+  {n:['mixed greens','salad greens','leafy greens','spring mix'],p:[{l:'cup',c:10},{l:'oz',c:5}],t:1},
+  {n:['bok choy'],p:[{l:'cup',c:9}],t:1},
+  {n:['leeks'],p:[{l:'cup',c:54},{l:'whole',c:54}],t:1},
+  {n:['artichoke'],p:[{l:'medium',c:60},{l:'whole',c:60}],t:1},
+  {n:['watercress','fennel'],p:[{l:'cup',c:8}],t:1},
+  // T1 Legumes
+  {n:['lentils','green lentils','red lentils','brown lentils','cooked lentils'],p:[{l:'cup',c:230},{l:'oz',c:28}],t:1},
+  {n:['chickpeas','garbanzo beans','garbanzo'],p:[{l:'cup',c:269},{l:'can',c:420}],t:1},
+  {n:['black beans'],p:[{l:'cup',c:227},{l:'can',c:350}],t:1},
+  {n:['white beans','cannellini beans','cannellini'],p:[{l:'cup',c:249},{l:'can',c:380}],t:1},
+  {n:['kidney beans'],p:[{l:'cup',c:225},{l:'can',c:350}],t:1},
+  {n:['edamame'],p:[{l:'cup',c:188}],t:1},
+  {n:['tofu','firm tofu','silken tofu'],p:[{l:'oz',c:22},{l:'cup',c:176},{l:'block',c:350},{l:'piece',c:88}],t:1},
+  {n:['tempeh'],p:[{l:'oz',c:55},{l:'cup',c:320},{l:'piece',c:193}],t:1},
+  {n:['hummus'],p:[{l:'tbsp',c:35},{l:'cup',c:408}],t:1},
+  // T1 Nuts & Seeds
+  {n:['walnuts'],p:[{l:'oz',c:185},{l:'handful',c:185},{l:'cup',c:765},{l:'tbsp',c:47}],t:1},
+  {n:['almonds'],p:[{l:'oz',c:164},{l:'handful',c:164}],t:1},
+  {n:['pistachios'],p:[{l:'oz',c:159},{l:'handful',c:159}],t:1},
+  {n:['cashews'],p:[{l:'oz',c:157},{l:'handful',c:157}],t:1},
+  {n:['mixed nuts'],p:[{l:'oz',c:173},{l:'handful',c:173}],t:1},
+  {n:['brazil nuts'],p:[{l:'piece',c:33},{l:'oz',c:185}],t:1},
+  {n:['chia seeds','chia'],p:[{l:'tbsp',c:58},{l:'tsp',c:19}],t:1},
+  {n:['flaxseeds','ground flax','flax','flaxseed'],p:[{l:'tbsp',c:37},{l:'tsp',c:12}],t:1},
+  {n:['hemp seeds','hemp hearts'],p:[{l:'tbsp',c:57}],t:1},
+  {n:['pumpkin seeds','pepitas'],p:[{l:'tbsp',c:47},{l:'oz',c:158}],t:1},
+  {n:['sunflower seeds'],p:[{l:'tbsp',c:51},{l:'oz',c:165}],t:1},
+  {n:['almond butter'],p:[{l:'tbsp',c:98},{l:'tsp',c:33}],t:1},
+  {n:['peanut butter','natural peanut butter'],p:[{l:'tbsp',c:94},{l:'tsp',c:31}],t:1},
+  {n:['tahini'],p:[{l:'tbsp',c:89},{l:'tsp',c:30}],t:1},
+  // T1 Fats
+  {n:['olive oil','extra virgin olive oil','evoo'],p:[{l:'tbsp',c:119},{l:'tsp',c:40},{l:'splash',c:60}],t:1},
+  {n:['avocado'],p:[{l:'half',c:120},{l:'whole',c:240},{l:'slice',c:30},{l:'cup',c:240},{l:'medium',c:234}],t:1},
+  // T1 Berries
+  {n:['blueberries'],p:[{l:'cup',c:84},{l:'oz',c:16},{l:'handful',c:42}],t:1},
+  {n:['strawberries','strawberry'],p:[{l:'cup',c:49},{l:'oz',c:9},{l:'piece',c:4}],t:1},
+  {n:['raspberries'],p:[{l:'cup',c:64}],t:1},
+  {n:['blackberries'],p:[{l:'cup',c:62}],t:1},
+  {n:['mixed berries'],p:[{l:'cup',c:70},{l:'handful',c:35}],t:1},
+  {n:['cherries'],p:[{l:'cup',c:87},{l:'piece',c:5}],t:1},
+  // T1 Herbs/condiments (low cal)
+  {n:['parsley','cilantro','basil','dill','mint','thyme','rosemary','oregano','herbs'],p:[{l:'tbsp',c:2},{l:'cup',c:5},{l:'handful',c:3}],t:1},
+  {n:['turmeric','cumin','cinnamon','ginger','paprika','spices'],p:[{l:'tsp',c:6},{l:'tbsp',c:18}],t:1},
+  {n:['lemon','lime'],p:[{l:'whole',c:12},{l:'tbsp',c:3}],t:1},
+  {n:['lemon juice','lime juice'],p:[{l:'tbsp',c:3}],t:1},
+  {n:['vinegar','apple cider vinegar','red wine vinegar'],p:[{l:'tbsp',c:3}],t:1},
+  {n:['vegetable broth','chicken broth','broth','stock','bone broth'],p:[{l:'cup',c:15}],t:1},
+  // T2 Fruits
+  {n:['apple'],p:[{l:'medium',c:95},{l:'large',c:116},{l:'small',c:77}],t:2},
+  {n:['banana'],p:[{l:'medium',c:105},{l:'large',c:121}],t:2},
+  {n:['orange'],p:[{l:'medium',c:62}],t:2},
+  {n:['pear'],p:[{l:'medium',c:101}],t:2},
+  {n:['mango'],p:[{l:'cup',c:99},{l:'whole',c:202}],t:2},
+  {n:['grapes'],p:[{l:'cup',c:104}],t:2},
+  {n:['kiwi'],p:[{l:'medium',c:42},{l:'piece',c:42}],t:2},
+  {n:['peach','plum','nectarine'],p:[{l:'medium',c:58},{l:'piece',c:58}],t:2},
+  {n:['pineapple'],p:[{l:'cup',c:83}],t:2},
+  {n:['watermelon'],p:[{l:'cup',c:46}],t:2},
+  {n:['pomegranate','pomegranate seeds'],p:[{l:'cup',c:144}],t:2},
+  {n:['dates'],p:[{l:'piece',c:20},{l:'date',c:20}],t:2},
+  {n:['figs','fig'],p:[{l:'medium',c:37},{l:'piece',c:37}],t:2},
+  {n:['sweet potato','yam'],p:[{l:'medium',c:103},{l:'cup',c:114},{l:'large',c:162}],t:2},
+  {n:['grapefruit'],p:[{l:'medium',c:74},{l:'half',c:37}],t:2},
+  // T2 Fish
+  {n:['salmon','wild salmon','grilled salmon'],p:[{l:'oz',c:47},{l:'fillet',c:280},{l:'piece',c:280}],t:2},
+  {n:['sardines','canned sardines'],p:[{l:'can',c:190},{l:'oz',c:59}],t:2},
+  {n:['mackerel'],p:[{l:'oz',c:56},{l:'fillet',c:230}],t:2},
+  {n:['tuna','canned tuna'],p:[{l:'can',c:109},{l:'oz',c:36}],t:2},
+  {n:['shrimp','prawns'],p:[{l:'oz',c:28},{l:'cup',c:112}],t:2},
+  {n:['cod','tilapia','halibut','white fish'],p:[{l:'oz',c:23},{l:'fillet',c:140},{l:'piece',c:140}],t:2},
+  {n:['anchovies'],p:[{l:'oz',c:42},{l:'can',c:90}],t:2},
+  {n:['smoked salmon','lox'],p:[{l:'oz',c:33},{l:'slice',c:33}],t:2},
+  {n:['trout'],p:[{l:'fillet',c:215},{l:'oz',c:44}],t:2},
+  {n:['oysters','mussels','clams'],p:[{l:'oz',c:25},{l:'cup',c:150}],t:2},
+  // T2 Fermented
+  {n:['miso','miso paste','white miso','red miso'],p:[{l:'tbsp',c:35},{l:'tsp',c:12}],t:2},
+  {n:['kimchi'],p:[{l:'cup',c:23}],t:2},
+  {n:['sauerkraut'],p:[{l:'cup',c:27}],t:2},
+  {n:['water kefir'],p:[{l:'cup',c:40}],t:2},
+  // T2 Grains
+  {n:['oats','rolled oats','oatmeal','steel cut oats'],p:[{l:'cup dry',c:300},{l:'cup cooked',c:158},{l:'half cup dry',c:150}],t:2},
+  {n:['quinoa'],p:[{l:'cup cooked',c:222},{l:'half cup cooked',c:111}],t:2},
+  {n:['brown rice'],p:[{l:'cup cooked',c:216},{l:'half cup cooked',c:108}],t:2},
+  {n:['farro'],p:[{l:'cup cooked',c:200},{l:'half cup cooked',c:100}],t:2},
+  {n:['barley'],p:[{l:'cup cooked',c:193}],t:2},
+  {n:['whole grain bread','whole wheat bread'],p:[{l:'slice',c:90}],t:2},
+  {n:['whole grain pasta','whole wheat pasta'],p:[{l:'cup cooked',c:174}],t:2},
+  {n:['wild rice','buckwheat'],p:[{l:'cup cooked',c:166}],t:2},
+  {n:['whole grain crackers'],p:[{l:'serving',c:120},{l:'piece',c:18}],t:2},
+  {n:['granola','homemade granola'],p:[{l:'cup',c:475},{l:'half cup',c:238},{l:'quarter cup',c:119}],t:2},
+  {n:['almond milk','unsweetened almond milk'],p:[{l:'cup',c:30}],t:2},
+  {n:['matcha'],p:[{l:'tsp',c:5},{l:'latte',c:65}],t:2},
+  {n:['green tea','black tea','herbal tea','tea'],p:[{l:'cup',c:3}],t:2},
+  {n:['coffee','black coffee'],p:[{l:'cup',c:5}],t:2},
+  // T3 Dairy
+  {n:['greek yogurt','plain greek yogurt','greek yoghurt'],p:[{l:'cup',c:130},{l:'oz',c:17}],t:3},
+  {n:['dairy kefir','kefir'],p:[{l:'cup',c:110}],t:3},
+  {n:['feta','feta cheese'],p:[{l:'oz',c:75},{l:'tbsp',c:25}],t:3},
+  {n:['cottage cheese'],p:[{l:'cup',c:206},{l:'half cup',c:103}],t:3},
+  {n:['parmesan','parmesan cheese'],p:[{l:'tbsp',c:22},{l:'oz',c:111}],t:3},
+  {n:['cheddar','cheddar cheese'],p:[{l:'oz',c:114},{l:'slice',c:113}],t:3},
+  {n:['cream cheese'],p:[{l:'tbsp',c:51},{l:'oz',c:98}],t:3},
+  {n:['butter'],p:[{l:'tbsp',c:102},{l:'tsp',c:34}],t:3},
+  {n:['whole milk','milk'],p:[{l:'cup',c:149}],t:3},
+  {n:['mozzarella'],p:[{l:'oz',c:85},{l:'slice',c:85}],t:3},
+  {n:['goat cheese'],p:[{l:'oz',c:76},{l:'tbsp',c:35}],t:3},
+  // T3 Eggs
+  {n:['egg','eggs','whole egg','boiled egg','poached egg','fried egg','scrambled egg'],p:[{l:'large',c:70},{l:'piece',c:70},{l:'whole',c:70}],t:3},
+  // T3 Poultry
+  {n:['chicken breast','grilled chicken breast','baked chicken'],p:[{l:'oz',c:47},{l:'piece',c:187},{l:'breast',c:187}],t:3},
+  {n:['chicken','chicken thigh'],p:[{l:'piece',c:180},{l:'oz',c:55},{l:'thigh',c:180}],t:3},
+  {n:['turkey breast','turkey'],p:[{l:'oz',c:38},{l:'slice',c:28},{l:'piece',c:152}],t:3},
+  {n:['venison','bison'],p:[{l:'oz',c:46}],t:3},
+  {n:['pork tenderloin','pork'],p:[{l:'oz',c:41},{l:'piece',c:165}],t:3},
+  // T3 Extras
+  {n:['dark chocolate','dark chocolate 70%'],p:[{l:'square',c:55},{l:'oz',c:170},{l:'piece',c:55}],t:3},
+  {n:['honey'],p:[{l:'tbsp',c:64},{l:'tsp',c:21}],t:3},
+  {n:['maple syrup'],p:[{l:'tbsp',c:52},{l:'tsp',c:17}],t:3},
+  {n:['coconut milk'],p:[{l:'cup',c:445},{l:'tbsp',c:28}],t:3},
+  {n:['coconut water'],p:[{l:'cup',c:46}],t:3},
+  {n:['protein powder','whey protein'],p:[{l:'scoop',c:120}],t:3},
+  // T4 Refined
+  {n:['white rice'],p:[{l:'cup cooked',c:206},{l:'half cup cooked',c:103}],t:4},
+  {n:['white bread'],p:[{l:'slice',c:79}],t:4},
+  {n:['white pasta','pasta'],p:[{l:'cup cooked',c:220}],t:4},
+  {n:['naan','naan bread'],p:[{l:'piece',c:260},{l:'whole',c:260}],t:4},
+  {n:['flour tortilla','tortilla'],p:[{l:'piece',c:146},{l:'whole',c:146}],t:4},
+  {n:['bagel'],p:[{l:'whole',c:270},{l:'half',c:135}],t:4},
+  {n:['rice cake','rice cakes'],p:[{l:'piece',c:35}],t:4},
+  {n:['crackers'],p:[{l:'serving',c:130},{l:'piece',c:15}],t:4},
+];
+
+// ── DEFAULT SAVED MEALS ────────────────────────────────────────────────────
+const DEF_SAVED=[
+  {name:'Overnight oats with berries',type:'Breakfast',cal:450,tier:1},
+  {name:'Savory veggie scramble',type:'Breakfast',cal:480,tier:1},
+  {name:'Greek yogurt parfait',type:'Breakfast',cal:350,tier:1},
+  {name:'Yogurt with homemade granola & fruit',type:'Breakfast',cal:402,tier:1},
+  {name:'Smoothie + hard boiled eggs',type:'Breakfast',cal:430,tier:1},
+  {name:'Avocado toast with eggs',type:'Breakfast',cal:500,tier:1},
+  {name:'Smoked salmon toast',type:'Breakfast',cal:470,tier:2},
+  {name:'Walnuts + apple',type:'Snack',cal:268,tier:1},
+  {name:'Greek yogurt + berries',type:'Snack',cal:182,tier:1},
+  {name:'Hummus + veggie sticks',type:'Snack',cal:200,tier:1},
+  {name:'Mixed nuts (handful)',type:'Snack',cal:180,tier:1},
+  {name:'Chia pudding',type:'Snack',cal:234,tier:1},
+  {name:'Dark chocolate + walnuts',type:'Snack',cal:240,tier:1},
+  {name:'Almond butter energy balls',type:'Snack',cal:209,tier:1},
+  {name:'Edamame (salted)',type:'Snack',cal:188,tier:1},
+  {name:'Hard boiled egg + fruit',type:'Snack',cal:167,tier:2},
+  {name:'Big Mediterranean salad',type:'Lunch',cal:520,tier:1},
+  {name:'Lentil veggie soup',type:'Lunch',cal:380,tier:1},
+  {name:'Leftovers',type:'Lunch',cal:500,tier:1},
+  {name:'Hummus & veggie plate',type:'Lunch',cal:400,tier:1},
+  {name:'Grain bowl (fridge clear-out)',type:'Lunch',cal:435,tier:1},
+  {name:'Deli salad + rotisserie chicken',type:'Lunch',cal:435,tier:2},
+  {name:'Sardine & white bean toast',type:'Lunch',cal:520,tier:1},
+  {name:'Salmon, lentils & roasted veg',type:'Dinner',cal:720,tier:2},
+  {name:'Chicken thighs, sweet potato & kale',type:'Dinner',cal:765,tier:2},
+  {name:'Sardine & white bean toast',type:'Dinner',cal:625,tier:1},
+  {name:'Miso soup, tofu & brown rice',type:'Dinner',cal:371,tier:2},
+  {name:'Takeout — Japanese (sashimi + miso)',type:'Dinner',cal:680,tier:2},
+  {name:'Takeout — Indian (dal + tandoori)',type:'Dinner',cal:710,tier:1},
+  {name:'Chickpea stew',type:'Dinner',cal:580,tier:1},
+  {name:'Weekend cook or takeout',type:'Dinner',cal:700,tier:2},
+];
+
+const DEF_WEEK={
+  week:'Current week',
+  Sun:{Breakfast:{name:'Savory veggie scramble',cal:480,tier:1},Snack:{name:'Walnuts + apple',cal:268,tier:1},Lunch:{name:'Big Mediterranean salad',cal:520,tier:1},Dinner:{name:'Salmon, lentils & roasted veg',cal:720,tier:2}},
+  Mon:{Breakfast:{name:'Overnight oats with berries',cal:450,tier:1},Snack:{name:'Greek yogurt + berries',cal:182,tier:1},Lunch:{name:'Leftovers',cal:570,tier:2},Dinner:{name:'Leftovers (grain bowl)',cal:490,tier:2}},
+  Tue:{Breakfast:{name:'Greek yogurt parfait',cal:350,tier:1},Snack:{name:'Hummus + veggie sticks',cal:200,tier:1},Lunch:{name:'Lentil veggie soup',cal:380,tier:1},Dinner:{name:'Sardine & white bean toast',cal:625,tier:1}},
+  Wed:{Breakfast:{name:'Smoothie + hard boiled eggs',cal:430,tier:1},Snack:{name:'Almond butter energy balls',cal:209,tier:1},Lunch:{name:'Hummus & veggie plate',cal:400,tier:1},Dinner:{name:'Chicken thighs, sweet potato & kale',cal:765,tier:2}},
+  Thu:{Breakfast:{name:'Avocado toast with eggs',cal:500,tier:1},Snack:{name:'Mixed nuts (handful)',cal:180,tier:1},Lunch:{name:'Leftovers',cal:495,tier:2},Dinner:{name:'Miso soup, tofu & brown rice',cal:371,tier:2}},
+  Fri:{Breakfast:{name:'Overnight oats with berries',cal:430,tier:1},Snack:{name:'Chia pudding',cal:234,tier:1},Lunch:{name:'Deli salad + rotisserie chicken',cal:435,tier:2},Dinner:{name:'Takeout — Japanese (sashimi + miso)',cal:680,tier:2}},
+  Sat:{Breakfast:{name:'Smoked salmon toast',cal:470,tier:2},Snack:{name:'Dark chocolate + walnuts',cal:240,tier:1},Lunch:{name:'Grain bowl (fridge clear-out)',cal:435,tier:1},Dinner:{name:'Weekend cook or takeout',cal:700,tier:2}},
+};
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+const ld=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+
+let week=ld('fm_week',DEF_WEEK);
+let profiles=ld('fm_profiles',{
+  aj:{weight:195,goalWeight:185,startWeight:195,activity:'Lightly active',goal:'Lose weight',age:36,heightCm:175},
+  callie:{weight:130,goalWeight:127,startWeight:140,activity:'Lightly active',goal:'Lose weight',age:32,heightCm:160,bf:true}
+});
+let saved=ld('fm_saved',DEF_SAVED);
+
+function saveAll(){sv('fm_week',week);sv('fm_profiles',profiles);sv('fm_saved',saved);}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let S={day:new Date().getDay(),trackerOpen:true,activeSlot:null,profTab:'aj',foodRes:[]};
+
+// ── CALCS ─────────────────────────────────────────────────────────────────────
+function tdee(p){
+  const am={'Sedentary':1.2,'Lightly active':1.375,'Moderately active':1.55,'Very active':1.725};
+  const bmr=10*(p.weight*0.4536)+6.25*p.heightCm-5*p.age+(p.heightCm===175?5:-161);
+  let t=Math.round(bmr*(am[p.activity]||1.375));
+  if(p.bf)t+=500; return t;
+}
+function target(p){const t=tdee(p);if(p.goal.includes('Lose'))return t-250;if(p.goal.includes('Build'))return t+250;return t;}
+function protein(p){return Math.round(p.weight*0.4536*(p.heightCm===175?1.8:1.6));}
+function dayCal(d){return SLOTS.reduce((s,sl)=>s+(week[d]?.[sl]?.cal||0),0);}
+function weekCal(){return DAYS.reduce((s,d)=>s+dayCal(d),0);}
+
+// ── FOOD PARSER ───────────────────────────────────────────────────────────────
+function findFood(txt){
+  txt=txt.toLowerCase().replace(/\b(fresh|frozen|cooked|raw|grilled|baked|roasted|steamed|boiled|poached|fried|sliced|chopped|diced|minced|large|small|extra|organic|whole|boneless|skinless)\b/g,'').trim();
+  let best=null,score=0;
+  for(const f of FDB){
+    for(const nm of f.n){
+      if(txt===nm)return f;
+      if(txt.includes(nm)||nm.includes(txt)){
+        const sc=Math.min(txt.length,nm.length)/Math.max(txt.length,nm.length);
+        if(sc>score){score=sc;best=f;}
+      }
+    }
+  }
+  return score>0.25?best:null;
+}
+function portionCal(food,qty,unit){
+  if(!unit)return food.p[0].c*qty;
+  const u=unit.toLowerCase().replace(/s$/,'');
+  for(const p of food.p){
+    const pl=p.l.toLowerCase();
+    if(pl===u||pl.startsWith(u)||u.startsWith(pl.split(' ')[0]))return p.c*qty;
+  }
+  return food.p[0].c*qty;
+}
+function parseItems(txt){
+  const UNITS=['tablespoons','tablespoon','teaspoons','teaspoon','cups','cup','ounces','ounce','grams','gram','pounds','pound','slices','slice','pieces','piece','cans','can','fillets','fillet','cloves','clove','handfuls','handful','oz','lb','tbsp','tsp','g','heads','head','stalks','stalk','spears','spear','medium','whole','half','scoop'];
+  const WQTY={half:0.5,a:1,an:1,one:1,two:2,three:3,four:4,quarter:0.25};
+  return txt.split(',').map(s=>s.trim()).filter(s=>s.length>1).map(item=>{
+    let t=item.toLowerCase().trim(),qty=1,unit=null;
+    const frac=t.match(/^(\d+)\/(\d+)\s*/);
+    if(frac){qty=parseInt(frac[1])/parseInt(frac[2]);t=t.slice(frac[0].length);}
+    else{
+      const num=t.match(/^(\d+\.?\d*)\s*/);
+      if(num){qty=parseFloat(num[1]);t=t.slice(num[0].length);}
+      else{for(const[w,v]of Object.entries(WQTY)){if(t.startsWith(w+' ')){qty=v;t=t.slice(w.length+1);break;}}}
+    }
+    for(const u of UNITS){if(t.startsWith(u+' ')||t===u){unit=u;t=t.slice(u.length).trim();if(t.startsWith('of '))t=t.slice(3);break;}}
+    const food=findFood(t.trim());
+    if(!food)return{orig:item,name:item,cal:0,tier:1,unknown:true};
+    return{orig:item,name:food.n[0],cal:Math.round(portionCal(food,qty,unit)),tier:food.t,qty,unit};
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){renderTracker();renderDayTabs();renderMeals();}
+
+function renderTracker(){
+  const wc=weekCal();
+  const ajT=target(profiles.aj)*7,calT=target(profiles.callie)*7;
+  const ajP=Math.min(Math.round(wc/ajT*100),130),calP=Math.min(Math.round(wc*0.82/calT*100),130);
+  const col=p=>p<80?'#E24B4A':p>112?'#BA7517':'#1D9E75';
+  const tierCals={1:0,2:0,3:0,4:0,5:0};let tot=0;
+  DAYS.forEach(d=>SLOTS.forEach(sl=>{const m=week[d]?.[sl];if(m?.cal){tierCals[m.tier||1]+=m.cal;tot+=m.cal;}}));
+  const tP={};[1,2,3,4,5].forEach(t=>tP[t]=tot?Math.round(tierCals[t]/tot*100):0);
+  document.getElementById('cal-rows').innerHTML=
+    `<div class="cal-row"><div class="cal-lbl"><span class="cal-name">AJ</span><span class="cal-val" style="color:${col(ajP)}">${wc.toLocaleString()} / ${(ajT).toLocaleString()} kcal</span></div><div class="cal-bar"><div class="cal-fill" style="width:${ajP}%;background:${col(ajP)}"></div></div></div>`+
+    `<div class="cal-row"><div class="cal-lbl"><span class="cal-name">Callie</span><span class="cal-val" style="color:${col(calP)}">${Math.round(wc*0.82).toLocaleString()} / ${calT.toLocaleString()} kcal</span></div><div class="cal-bar"><div class="cal-fill" style="width:${calP}%;background:${col(calP)}"></div></div></div>`;
+  document.getElementById('tier-rows').innerHTML=[1,2,3,4].map(t=>{
+    const a=tP[t]||0,tgt=TGT[t],d=a-tgt;
+    const c=Math.abs(d)<=8?TC[t]:d<0?'#E24B4A':'#BA7517';
+    const st=Math.abs(d)<=8?'✓':d<0?`↓${Math.abs(d)}%`:`↑${d}%`;
+    return `<div class="tier-row"><div class="tier-lbl" style="color:${TC[t]}">T${t} <span style="font-size:9px;color:#aaa">${st}</span></div><div class="tier-track"><div class="tier-fill" style="width:${Math.min(a,100)}%;background:${c}"></div><div class="tier-target" style="left:${Math.min(tgt,100)}%;background:${TC[t]}"></div></div><div class="tier-pct" style="color:${c}">${a}%</div></div>`;
+  }).join('');
+}
+
+function renderDayTabs(){
+  document.getElementById('day-tabs').innerHTML=DAYS.map((d,i)=>`
+    <button class="day-tab${S.day===i?' active':''}" onclick="setDay(${i})">
+      <span class="day-tab-lbl">${d}</span>
+      <span class="day-tab-cal">${dayCal(d)||'—'}</span>
+    </button>`).join('');
+}
+
+function renderMeals(){
+  const d=DAYS[S.day],dc=dayCal(d);
+  document.getElementById('meals-wrap').innerHTML=
+    `<div class="day-total"><span class="day-total-lbl">${d} total</span><span class="day-total-val">${dc} kcal</span></div>`+
+    SLOTS.map(sl=>{
+      const m=week[d]?.[sl];
+      if(!m)return`<div class="meal-card"><div class="meal-empty" onclick="openAction('${d}','${sl}',true)"><span class="empty-plus">+</span><span class="empty-txt">Tap to add ${sl.toLowerCase()}</span></div></div>`;
+      const col=TC[m.tier||1];
+      return`<div class="meal-card">
+        <div class="meal-hdr" onclick="openAction('${d}','${sl}',false)">
+          <div class="meal-left">
+            <div class="meal-type">${sl}</div>
+            <div class="meal-name">${m.name}</div>
+            <div class="meal-cal">${m.cal||'—'} kcal</div>
+          </div>
+          <div class="meal-right">
+            <div class="eaten-btn${m.eaten?' on':''}" onclick="event.stopPropagation();qEaten('${d}','${sl}')">${m.eaten?'✓':''}</div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+        <div class="tier-stripe" style="background:${col}"></div>
+      </div>`;
+    }).join('');
+}
+
+function renderProfile(p){
+  const prof=profiles[p];
+  const tgt=target(prof),prot=protein(prof),td=tdee(prof);
+  const prog=prof.startWeight>prof.goalWeight?Math.min(Math.max(Math.round((prof.startWeight-prof.weight)/(prof.startWeight-prof.goalWeight)*100),0),100):100;
+  const wks=prof.weight>prof.goalWeight?Math.round((prof.weight-prof.goalWeight)*3500/250/7):0;
+  document.getElementById('profile-body').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-lbl">Current weight</div><div class="stat-val">${prof.weight}<span class="stat-unit"> lb</span></div></div>
+      <div class="stat"><div class="stat-lbl">Goal weight</div><div class="stat-val">${prof.goalWeight}<span class="stat-unit"> lb</span></div></div>
+      <div class="stat"><div class="stat-lbl">Daily calories</div><div class="stat-val">${tgt.toLocaleString()}<span class="stat-unit"> kcal</span></div></div>
+      <div class="stat"><div class="stat-lbl">Daily protein</div><div class="stat-val">${prot}<span class="stat-unit"> g</span></div></div>
+      <div class="stat"><div class="stat-lbl">TDEE estimate</div><div class="stat-val">${td.toLocaleString()}<span class="stat-unit"> kcal</span></div></div>
+      <div class="stat"><div class="stat-lbl">${wks>0?'Weeks to goal':'Status'}</div><div class="stat-val">${wks>0?wks:'✓'}<span class="stat-unit">${wks>0?' wks':' at goal'}</span></div></div>
+    </div>
+    <div class="prog-card">
+      <div class="prog-lbl"><span>Weight: ${prof.startWeight} → ${prof.goalWeight} lb</span><span>${prog}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${prog}%"></div></div>
+      <div class="prog-sub">${Math.max(prof.weight-prof.goalWeight,0).toFixed(1)} lb remaining${wks>0?' · ~'+wks+' weeks':''}</div>
+    </div>
+    ${prof.bf?'<div class="note-card">🤱 Breastfeeding — +500 kcal added to daily target. Minimum safe intake: 1,800 kcal/day. Priority: omega-3 DHA, calcium, iron, iodine.</div>':''}
+    <div class="update-card">
+      <div class="update-title">Update stats</div>
+      <div class="update-row"><span class="update-lbl">Current weight (lb)</span><input class="update-input" type="number" id="${p}-w" value="${prof.weight}" step="0.1"></div>
+      <div class="update-row"><span class="update-lbl">Goal weight (lb)</span><input class="update-input" type="number" id="${p}-gw" value="${prof.goalWeight}" step="0.1"></div>
+      <div style="font-size:13px;color:var(--gray-600);margin-bottom:4px">Activity level</div>
+      <select class="update-select" id="${p}-act">${['Sedentary','Lightly active','Moderately active','Very active'].map(a=>`<option${prof.activity===a?' selected':''}>${a}</option>`).join('')}</select>
+      <div style="font-size:13px;color:var(--gray-600);margin:10px 0 4px">Goal</div>
+      <select class="update-select" id="${p}-goal">${['Lose weight','Maintain','Build muscle'].map(g=>`<option${prof.goal===g?' selected':''}>${g}</option>`).join('')}</select>
+      ${p==='callie'?`<div class="update-row" style="margin-top:10px"><span class="update-lbl">Breastfeeding</span><select class="update-input" id="callie-bf" style="width:auto"><option value="yes"${prof.bf?' selected':''}>Yes</option><option value="no"${!prof.bf?' selected':''}>No</option></select></div>`:''}
+      <button class="save-btn" onclick="saveProf('${p}')">Save update</button>
+      <div class="saved-msg" id="${p}-saved" style="display:none">✓ Saved — targets updated</div>
+    </div>`;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function setDay(i){S.day=i;renderDayTabs();renderMeals();}
+function toggleTracker(){S.trackerOpen=!S.trackerOpen;document.getElementById('tracker-body').className='tracker-body'+(S.trackerOpen?'':' collapsed');document.getElementById('tracker-tog').textContent=S.trackerOpen?'▼':'▶';}
+
+function showPage(pg){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-'+pg).classList.add('active');
+  if(pg==='profile')renderProfile(S.profTab);
+}
+function showPTab(p){
+  S.profTab=p;
+  document.getElementById('ptab-aj').className='ptab'+(p==='aj'?' active':'');
+  document.getElementById('ptab-callie').className='ptab'+(p==='callie'?' active':'');
+  renderProfile(p);
+}
+function saveProf(p){
+  const pr=profiles[p];
+  const w=parseFloat(document.getElementById(`${p}-w`).value);
+  const gw=parseFloat(document.getElementById(`${p}-gw`).value);
+  if(w)pr.weight=w;if(gw)pr.goalWeight=gw;
+  pr.activity=document.getElementById(`${p}-act`).value;
+  pr.goal=document.getElementById(`${p}-goal`).value;
+  if(p==='callie')pr.bf=document.getElementById('callie-bf').value==='yes';
+  saveAll();renderProfile(p);renderTracker();
+  const msg=document.getElementById(`${p}-saved`);
+  msg.style.display='block';setTimeout(()=>msg.style.display='none',2500);
+}
+
+function openAction(d,sl,isEmpty){
+  S.activeSlot={d,sl};
+  const m=week[d]?.[sl];
+  document.getElementById('as-title').textContent=`${d} · ${sl}`;
+  document.getElementById('as-sub').textContent=m?`${m.name} · ${m.cal||'?'} kcal`:'Empty slot';
+  document.getElementById('as-eaten').style.display=m?'flex':'none';
+  document.getElementById('as-clear').style.display=m?'flex':'none';
+  if(m){
+    document.getElementById('as-eaten-icon').textContent=m.eaten?'☑':'✓';
+    document.getElementById('as-eaten-lbl').textContent=m.eaten?'Mark as not eaten':'Mark as eaten';
+  }
+  document.getElementById('action-sheet').classList.add('open');
+}
+function bgClose(id){document.getElementById(id).classList.remove('open');}
+function doEaten(){
+  const{d,sl}=S.activeSlot;
+  if(week[d]?.[sl]){week[d][sl].eaten=!week[d][sl].eaten;saveAll();render();}
+  bgClose('action-sheet');
+}
+function qEaten(d,sl){if(week[d]?.[sl]){week[d][sl].eaten=!week[d][sl].eaten;saveAll();render();}}
+function doClear(){
+  const{d,sl}=S.activeSlot;
+  if(week[d])week[d][sl]=null;
+  saveAll();render();bgClose('action-sheet');
+}
+function openSwap(){
+  const{d,sl}=S.activeSlot;
+  bgClose('action-sheet');
+  document.getElementById('swap-sub').textContent=`Choose a ${sl.toLowerCase()} for ${d}`;
+  const rel=saved.filter(m=>m.type===sl);
+  document.getElementById('swap-list').innerHTML=rel.length?rel.map((m,i)=>`
+    <div class="swap-item" onclick="doSwap(${saved.indexOf(m)})">
+      <div class="swap-dot" style="background:${TC[m.tier||1]}"></div>
+      <div class="swap-name">${m.name}</div>
+      <div class="swap-cal">${m.cal} kcal</div>
+    </div>`).join(''):`<div style="padding:12px;font-size:13px;color:var(--gray-400)">No saved meals for this slot. Import a week from Claude to populate.</div>`;
+  document.getElementById('swap-sheet').classList.add('open');
+}
+function doSwap(i){
+  const{d,sl}=S.activeSlot;const m=saved[i];
+  if(!week[d])week[d]={};
+  week[d][sl]={name:m.name,cal:m.cal,tier:m.tier||1,eaten:false};
+  saveAll();render();bgClose('swap-sheet');
+}
+function openFoodLog(){
+  bgClose('action-sheet');
+  document.getElementById('food-input').value='';
+  document.getElementById('food-results').style.display='none';
+  document.getElementById('food-sheet').classList.add('open');
+  setTimeout(()=>document.getElementById('food-input').focus(),350);
+}
+function calcFood(){
+  const txt=document.getElementById('food-input').value.trim();
+  if(!txt)return;
+  const res=parseItems(txt);S.foodRes=res;
+  const tot=res.reduce((s,r)=>s+r.cal,0);
+  const tc={};res.forEach(r=>tc[r.tier]=(tc[r.tier]||0)+r.cal);
+  const tp={};Object.keys(tc).forEach(t=>tp[t]=tot?Math.round(tc[t]/tot*100):0);
+  let domT=1,domC=0;Object.entries(tc).forEach(([t,c])=>{if(c>domC){domC=c;domT=parseInt(t);}});
+  const el=document.getElementById('food-results');el.style.display='block';
+  el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Breakdown</div>`+
+    res.map(r=>r.unknown
+      ?`<div class="result-row"><div class="result-dot" style="background:var(--gray-200)"></div><div class="result-name">${r.orig}</div><div class="result-unknown">not recognized — try Claude</div></div>`
+      :`<div class="result-row"><div class="result-dot" style="background:${TC[r.tier]}"></div><div class="result-name">${r.orig}</div><div class="result-cal">${r.cal} kcal</div><div class="result-badge" style="background:${TB[r.tier]};color:${TC[r.tier]}">T${r.tier}</div></div>`
+    ).join('')+
+    `<div class="result-total"><span>Total</span><span>${tot} kcal</span></div>`+
+    `<div class="tier-badges">${Object.entries(tp).filter(([t,p])=>p>0).map(([t,p])=>`<span class="tbadge" style="background:${TB[t]};color:${TC[t]}">T${t}: ${p}%</span>`).join('')}</div>`+
+    `<button class="save-food-btn" onclick="saveFoodSlot(${tot},${domT})">Save to ${S.activeSlot?.sl||'slot'}</button>`;
+}
+function saveFoodSlot(cal,tier){
+  const{d,sl}=S.activeSlot;
+  const txt=document.getElementById('food-input').value.trim();
+  const nm=txt.length>38?txt.slice(0,35)+'…':txt;
+  if(!week[d])week[d]={};
+  week[d][sl]={name:nm,cal,tier,eaten:true};
+  saveAll();render();bgClose('food-sheet');
+}
+function openImport(){
+  document.getElementById('import-ta').value='';
+  document.getElementById('import-err').style.display='none';
+  document.getElementById('import-sheet').classList.add('open');
+}
+function doImport(){
+  const txt=document.getElementById('import-ta').value.trim();
+  const err=document.getElementById('import-err');
+  try{
+    const data=JSON.parse(txt);
+    DAYS.forEach(d=>{
+      if(data[d]){
+        if(!week[d])week[d]={};
+        SLOTS.forEach(sl=>{
+          if(data[d][sl]){
+            week[d][sl]={name:data[d][sl].name||'Meal',cal:parseInt(data[d][sl].cal)||0,tier:parseInt(data[d][sl].tier)||1,eaten:false};
+          }
+        });
+      }
+    });
+    if(data.week){week.week=data.week;document.getElementById('week-label').textContent=data.week;}
+    saveAll();render();bgClose('import-sheet');
+  }catch(e){err.style.display='block';err.textContent='Invalid format. Paste the complete JSON block from Claude.';}
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+document.getElementById('week-label').textContent=week.week||'Current week';
+S.day=new Date().getDay();
+render();
+</script>
+</body>
+</html>
