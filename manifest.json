@@ -1,25 +1,14 @@
 {
   "name": "Family Meals",
-  "short_name": "Family Meals",
-  "description": "Weekly meal planner for AJ & Callie",
-  "start_url": "/myappstore/",
-  "scope": "/myappstore/",
+  "short_name": "Meals",
+  "description": "Weekly meal planner for AJ and Callie",
+  "start_url": "/mealplanner/",
+  "scope": "/mealplanner/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#27500A",
   "theme_color": "#27500A",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
   ]
 }

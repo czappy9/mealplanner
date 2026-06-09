@@ -1,20 +1,18 @@
-const CACHE = 'family-meals-v1';
+const CACHE = 'family-meals-v4';
 const ASSETS = [
-  '/myappstore/',
-  '/myappstore/index.html',
-  '/myappstore/manifest.json',
-  '/myappstore/icon-192.png',
-  '/myappstore/icon-512.png'
+  '/mealplanner/',
+  '/mealplanner/index.html',
+  '/mealplanner/manifest.json',
+  '/mealplanner/icon-192.png',
+  '/mealplanner/icon-512.png'
 ];
 
-// Install — cache all assets
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-// Activate — clear old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -23,7 +21,6 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch — serve from cache, fall back to network
 self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached => {
@@ -34,7 +31,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('/myappstore/index.html'));
+      }).catch(() => caches.match('/mealplanner/index.html'));
     })
   );
 });
